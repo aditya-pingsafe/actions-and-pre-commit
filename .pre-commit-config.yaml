@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pingsafe-cli
+        name: Checking for hardcoded secrets in staging area
+        entry: pingsafe-cli
+        language: system
+        args: ['--verbose', 'scan', 'secret', '-d', './', '--pre-commit']
+        pass_filenames: false

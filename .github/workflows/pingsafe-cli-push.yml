@@ -1,0 +1,36 @@
+name: PingSafe CLI Push Scan
+
+on:
+  # Triggers the workflow on every push.
+  # Note: (In case of multiple commits in single push it only scans the latest of all pushed commits)
+  push
+
+jobs:
+  pingsafe-cli:
+    runs-on: ubuntu-latest
+    container:
+      image: pingsafe/cli:latest
+      options: --entrypoint ""
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 1
+
+      - name: Configure git config
+        run: git config --global --add safe.directory $PWD 
+
+      - name: Configure PingSafe-CLI
+        shell: bash
+        run: pingsafe-cli config --api-token ${{ secrets.PINGSAFE_TOKEN }}
+
+      - name: Configure git
+        shell: bash
+        run: git config --global --add safe.directory $PWD
+
+      - name: Run Secret Detector
+        shell: bash
+        run: pingsafe-cli scan secret -d $PWD --scan-commit
+
+
