@@ -13,7 +13,7 @@ jobs:
       options: --entrypoint ""
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
           fetch-depth: 1
@@ -31,6 +31,14 @@ jobs:
 
       - name: Run Secret Detector
         shell: bash
+        id: secret-detector
         run: pingsafe-cli scan secret -d $PWD --scan-commit
-
-
+      
+      - name: Job summary - on failure
+        if: ${{ failure() && steps.secret-detector.outcome == 'failure' }}
+        run: echo "❌ Secrets Detected" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Job summary - on success
+        if: steps.secret-detector.outcome == 'success' 
+        run: echo "✅ No Secrets Detected" >> $GITHUB_STEP_SUMMARY
+        

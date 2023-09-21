@@ -14,7 +14,7 @@ jobs:
       options: --entrypoint ""
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
           fetch-depth: 0
@@ -29,9 +29,16 @@ jobs:
         run: git config --global --add safe.directory $PWD
 
       - name: Run Secret Detector
+        id: secret-detector
         run:  pingsafe-cli scan secret -d $PWD --pull-request origin/$SRC $DEST
         env:
           DEST: ${{ github.event.pull_request.base.sha }}
           SRC: ${{ github.event.pull_request.head.ref }}
-
-
+   
+      - name: Job summary - on failure
+        if: ${{ failure() && steps.secret-detector.outcome == 'failure' }}
+        run: echo "❌ Secrets Detected" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Job summary - on success
+        if: steps.secret-detector.outcome == 'success' 
+        run: echo "✅ No Secrets Detected" >> $GITHUB_STEP_SUMMARY
